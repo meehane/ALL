@@ -7,15 +7,11 @@ from Crypto import Random
 def send_message(sock, message):
 	for socket in clients:
 		if socket != connect_socket and socket != sock: #Don't send the client their own messages
-			#cipher = AES.new(keys[socket])
-#			print(socket)
-#			print(message)
 			try:
-				#encrypt message
-				#cypher = AES.new(keys[socket])
-				#print str(keys[socket])
-				#message = encrypt_aes(cipher,message)
-				socket.send(message)
+				if socket in keys:
+					cipher = AES.new(keys[socket])
+					message1 = encrypt_aes(cipher,message)
+				socket.send(message1)
 			except: #broken connection
 				socket.close()
 				del keys[socket]
@@ -44,7 +40,7 @@ keys = {}
 #dictionary of clients usernames
 usernames = {}
 #dict of ciphers
-#ciphers = {}
+#cipher = {}
 
 port = 5000
 host = socket.gethostname()
@@ -70,9 +66,6 @@ while True:
 			sock, address = connect_socket.accept()
 			clients.append(sock)
 			print "New connection from " + str(address)
-			#send_message(connect_socket, "\r" + str(address) + " has entered the chat\nThere are " + str(len(clients)-1) + " clients online\n")
-			print "Clients online: " + str(len(clients)-1)
-			#print keys
 		#END HANDLE NEW CONNECTION
 		else:
 			try:
@@ -85,17 +78,20 @@ while True:
 						aes_key = str(decrypt_rsa(aes_key))
 						if socket not in keys:
 							keys[socket] = aes_key
-					elif message[0:8] == "setname ":
-						usernames[socket] = message[8:]
-						send_message(connect_socket, "\r<Server> " + usernames[socket] + " has entered the chat\n<Server> Clients online: " + str(len(clients)-1) + "\n")
-						#ciphers[socket] = AES.new(keys[socket])
 					else:
 						#decrypt message
 						cipher = AES.new(keys[socket])
 						message = decrypt_aes(cipher,message)
-						#broadcast message
-						send_message(socket, "\r" +"<" + usernames[socket] + "> " + message)
-						print "\r<" + usernames[socket] + "> " + message
+						
+						if message[0:8] == "setname ":
+							usernames[socket] = message[8:]
+							while len(keys[socket]) < 32:
+								time.sleep(0.1)
+							send_message(connect_socket, "\r<Server> " + usernames[socket] + " has entered the chat!\n")
+						else:
+							#broadcast message
+							send_message(socket, "\r" +"<" + usernames[socket] + "> " + message)
+							#print "\r<" + usernames[socket] + "> " + message
 				#END RECEIVE MESSAGE FROM CLIENT
 			except:
 				#if it cant rcv on socket, client must have disconnected

@@ -27,12 +27,6 @@ port = int(sys.argv[2])
 s = socket.socket()
 s.settimeout(2)
 
-#generate AES key
-#aes_key = os.urandom(32)
-#public_rsa = RSA.importKey(open("pub.pem", "r"))
-#encrypted_aes = public_rsa.encrypt(aes_key,32)
-
-
 #Make initial connection to server
 try :
 	s.connect((host, port))
@@ -40,22 +34,23 @@ except :
 	print 'Unable to connect'
 	sys.exit()
 
-#Set display name
-username = raw_input("Enter a display name: ")
-s.send("setname " + str(username))
 
-print 'Connected to remote host. Start sending messages'
-prompt()
-
-#generate AES key                    
-aes_key = os.urandom(32) 
+#generate AES key
+aes_key = os.urandom(32)
 public_rsa = RSA.importKey(open("pub.pem", "r"))
 encrypted_aes = public_rsa.encrypt(aes_key,32)
 cipher = AES.new(aes_key)
 
 #Send AES key to server
-time.sleep(1)
 s.send("setnewkey" + str(encrypted_aes[0]))
+
+#Set display name
+username = raw_input("Enter a display name: ")
+print 'Connecting to server...'
+time.sleep(1)
+s.send(encrypt_aes(cipher, "setname " + str(username)))
+
+prompt()
 
 while 1:
 	socket_list = [sys.stdin, s]
@@ -71,6 +66,7 @@ while 1:
 				sys.exit()
 			else:
 				#print data
+				data = decrypt_aes(cipher, data)
 				sys.stdout.write(data)
 				prompt()
         
