@@ -1,4 +1,4 @@
-import socket, select, time, base64, os
+import sys, socket, select, time, base64, os
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
 from Crypto import Random
@@ -43,15 +43,18 @@ usernames = {}
 #cipher = {}
 
 port = 5000
-host = socket.gethostname()
+host = ""
 
-connect_socket = socket.socket()
+
+connect_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+connect_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+#connect_socket = socket.socket()
 connect_socket.bind((host,port))
 connect_socket.listen(10)
 
 clients.append(connect_socket)
 
-print "Chat server started on port " + str(port)
+print("Chat server started on port " + str(port))
 
 announce_time = 5 #number of seconds between client announcements
 last_announce = 0
@@ -65,7 +68,7 @@ while True:
 		if socket == connect_socket:
 			sock, address = connect_socket.accept()
 			clients.append(sock)
-			print "New connection from " + str(address)
+			print("New connection from " + str(address))
 		#END HANDLE NEW CONNECTION
 		else:
 			try:
@@ -96,10 +99,12 @@ while True:
 			except:
 				#if it cant rcv on socket, client must have disconnected
 				send_message(socket, "%s has disconnected" % usernames[socket])
-				print "%s has disconnected" % usernames[socket]
+				print("%s has disconnected" % usernames[socket])
 				socket.close()
 				clients.remove(socket)
 				del keys[socket]
 				continue
 
 connect_socket.close()
+
+
