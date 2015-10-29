@@ -24,7 +24,8 @@ if(len(sys.argv) < 3) :
 host = sys.argv[1]
 port = int(sys.argv[2])
 
-s = socket.socket()
+s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+#s = socket.socket()
 s.settimeout(2)
 
 #Make initial connection to server
