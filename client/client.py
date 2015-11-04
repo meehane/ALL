@@ -1,4 +1,4 @@
-import socket, select, string, sys, time, base64, os
+import socket, select, string, sys, time, base64, os, crypt, pickle
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
 
@@ -16,16 +16,22 @@ def decrypt_aes(cipher, encrypted):
 	return(cipher.decrypt(base64.b64decode(encrypted)).rstrip("{"))
 
 
-     
+#DYNAMIC PORT/IP START     
 if(len(sys.argv) < 3) :
 	print 'Usage : python client.py hostname port'
 	sys.exit()
 
 host = sys.argv[1]
 port = int(sys.argv[2])
+#DYNAMIC PORT/IP END
+
+#STATIC PORT IP START
+#host = 192.168.0.2
+#port = 5000
+#STATIC PORT/IP END
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-#s = socket.socket()
+
 s.settimeout(2)
 
 #Make initial connection to server
@@ -45,14 +51,17 @@ cipher = AES.new(aes_key)
 #Send AES key to server
 s.send("setnewkey" + str(encrypted_aes[0]))
 
-#Set display name
-username = raw_input("Enter a display name: ")
-print 'Connecting to server...'
+#START LOGIN
+username = raw_input("Enter your username: ")
+password = raw_input("Enter your password: ")
+
+login_data = username + ',' + password
+
+print 'Logging in to server...'
 time.sleep(1)
-s.send(encrypt_aes(cipher, "setname " + str(username)))
-
-prompt()
-
+s.send(encrypt_aes(cipher, "setname " + login_data))
+#END LOGIN
+message_count = 0
 while 1:
 	socket_list = [sys.stdin, s]
 	#Get the list of sockets that are readable
@@ -63,14 +72,16 @@ while 1:
 		if sock == s:
 			data = sock.recv(4096)
 			if not data:
-				print '\nDisconnected from chat server'
+				if message_count == 0 :
+					print("Login failed.")
+				print "\nDisconnected from chat server."
 				sys.exit()
 			else:
 				#print data
 				data = decrypt_aes(cipher, data)
 				sys.stdout.write(data)
 				prompt()
-        
+				message_count = message_count + 1        
 		#user entered a message
         	else:
 			message = sys.stdin.readline()

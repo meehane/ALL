@@ -1,4 +1,4 @@
-import sys, socket, select, time, base64, os
+import socket, select, time, base64, os, crypt, pickle
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
 from Crypto import Random
@@ -16,6 +16,18 @@ def send_message(sock, message):
 				socket.close()
 				del keys[socket]
 				clients.remove(socket)
+
+def send_single_message(socket, message):
+	print("SENDING SINGLE MESSAGE")
+	try:
+		if socket in keys:
+			cipher = AES.new(keys[socket])
+			message1 = encrypt_aes(cipher,message)
+		socket.send(message)
+	except:
+		socket.close()
+		del keys[socket]
+		clients.remove(socket)
 
 #decrypt RSA
 def decrypt_rsa(key):
@@ -43,18 +55,15 @@ usernames = {}
 #cipher = {}
 
 port = 5000
-host = ""
+host = socket.gethostname()
 
-
-connect_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-connect_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-#connect_socket = socket.socket()
+connect_socket = socket.socket()
 connect_socket.bind((host,port))
 connect_socket.listen(10)
 
 clients.append(connect_socket)
 
-print("Chat server started on port " + str(port))
+print "Chat server started on port " + str(port)
 
 announce_time = 5 #number of seconds between client announcements
 last_announce = 0
@@ -68,7 +77,7 @@ while True:
 		if socket == connect_socket:
 			sock, address = connect_socket.accept()
 			clients.append(sock)
-			print("New connection from " + str(address))
+			print "New connection from " + str(address)
 		#END HANDLE NEW CONNECTION
 		else:
 			try:
@@ -87,24 +96,42 @@ while True:
 						message = decrypt_aes(cipher,message)
 						
 						if message[0:8] == "setname ":
-							usernames[socket] = message[8:]
+							#START OF AUTH
+							file = open('users.db', 'rb')#open a database of authenticated users
+							db = pickle.load(file)
+							user = message[8:]
+							username,password = user.split(",")
+							login_success = "false" #initially the user is not authenticated
+							for key,item in db.items():
+								if key == username.decode("ascii"):#search the database for the entered username
+									comp_hash = item #get the users stored password hash
+									hash = crypt.crypt( password.decode("ascii"), comp_hash)#hash the entered username with the stored password
+									if comp_hash == hash:#if they match
+										login_success = "true"#set the authenticated value to true
+							file.close()
+							if login_success == "true" :
+								usernames[socket] = username
+							else:
+								socket.close()
+							#END OF AUTH
 							while len(keys[socket]) < 32:
 								time.sleep(0.1)
 							send_message(connect_socket, "\r<Server> " + usernames[socket] + " has entered the chat!\n")
 						else:
 							#broadcast message
 							send_message(socket, "\r" +"<" + usernames[socket] + "> " + message)
-							#print "\r<" + usernames[socket] + "> " + message
 				#END RECEIVE MESSAGE FROM CLIENT
 			except:
 				#if it cant rcv on socket, client must have disconnected
-				send_message(socket, "%s has disconnected" % usernames[socket])
-				print("%s has disconnected" % usernames[socket])
-				socket.close()
-				clients.remove(socket)
-				del keys[socket]
-				continue
-
+				try:
+					send_message(socket, "%s has disconnected" % usernames[socket])
+					print "%s has disconnected" % usernames[socket]
+					socket.close()
+					clients.remove(socket)
+					del keys[socket]
+					continue
+				except:
+					socket.close()
+					clients.remove(socket)#send_message(connect_socket, "Someone has disconnected")
+					continue
 connect_socket.close()
-
-
