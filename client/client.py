@@ -26,7 +26,7 @@ def decrypt_aes(cipher, encrypted):
 #DYNAMIC PORT/IP END
 
 #STATIC PORT IP START
-host = chat.teamudp.co.uk
+host = "chat.teamudp.co.uk"
 port = 80
 #STATIC PORT/IP END
 
