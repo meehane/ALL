@@ -17,17 +17,17 @@ def decrypt_aes(cipher, encrypted):
 
 
 #DYNAMIC PORT/IP START     
-if(len(sys.argv) < 3) :
-	print 'Usage : python client.py hostname port'
-	sys.exit()
+#if(len(sys.argv) < 3) :
+	#print 'Usage : python client.py hostname port'
+	#sys.exit()
 
-host = sys.argv[1]
-port = int(sys.argv[2])
+#host = sys.argv[1]
+#port = int(sys.argv[2])
 #DYNAMIC PORT/IP END
 
 #STATIC PORT IP START
-#host = 192.168.0.2
-#port = 5000
+host = chat.teamudp.co.uk
+port = 80
 #STATIC PORT/IP END
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -37,8 +37,9 @@ s.settimeout(2)
 #Make initial connection to server
 try :
 	s.connect((host, port))
+	print'Connected to chat.teamudp.co.uk'
 except :
-	print 'Unable to connect'
+	print 'Unable to connect to chat.teamudp.co.uk. Is the server running?'
 	sys.exit()
 
 
