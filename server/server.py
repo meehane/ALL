@@ -10,7 +10,7 @@ def send_message(sock, message):
 			try:
 				if socket in keys:
 					cipher = AES.new(keys[socket])
-					message1 = encrypt_aes(cipher,message + "      ")
+					message1 = encrypt_aes(cipher,message)
 				socket.send(message1)
 			except: #broken connection
 				socket.close()

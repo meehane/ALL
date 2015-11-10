@@ -86,6 +86,7 @@ while 1:
 		#user entered a message
         	else:
 			message = sys.stdin.readline()
+			message = message[:-1] + "          \n"
 			#encrypt message
 			message = encrypt_aes(cipher, message)
 			s.send(message)
