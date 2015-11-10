@@ -1,4 +1,4 @@
-import socket, select, time, base64, os, crypt, pickle
+import sys, socket, select, time, base64, os, crypt, pickle
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
 from Crypto import Random
@@ -45,28 +45,24 @@ def decrypt_aes(cipher, encrypted):
 	return(cipher.decrypt(base64.b64decode(encrypted)).rstrip("{"))
 
 
-#list of clients
+#list of clients sockets
 clients = []
 #dictionary of client's AES keys
 keys = {}
 #dictionary of clients usernames
 usernames = {}
-#dict of ciphers
-#cipher = {}
 
-port = 5000
-host = socket.gethostname()
+port = 80
+host = ""
 
-connect_socket = socket.socket()
+connect_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+connect_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 connect_socket.bind((host,port))
 connect_socket.listen(10)
 
 clients.append(connect_socket)
 
 print "Chat server started on port " + str(port)
-
-announce_time = 5 #number of seconds between client announcements
-last_announce = 0
 
 while True:
 
