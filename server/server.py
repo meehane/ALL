@@ -46,7 +46,7 @@ def decrypt_aes(cipher, encrypted):
 	return(cipher.decrypt(base64.b64decode(encrypted)).rstrip("{"))
 #Get current time
 def current_time():
-	current_time = datetime.datetime.now(timezone('UTC')
+	current_time = datetime.datetime.now(timezone('UTC'))
 	#hours = current_time.strftime("%l")
 	#minutes = current_time.minute
 	time = current_time.strftime("%H:%M:%S")
