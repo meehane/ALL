@@ -1,4 +1,5 @@
 import sys, socket, select, time, base64, os, crypt, pickle, datetime
+from pytz import timezone
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
 from Crypto import Random
@@ -45,11 +46,12 @@ def decrypt_aes(cipher, encrypted):
 	return(cipher.decrypt(base64.b64decode(encrypted)).rstrip("{"))
 #Get current time
 def current_time():
-	current_time = datetime.datetime.now().time()
-	hours = current_time.strftime("%l")
-	minutes = current_time.minute
-	ampm = current_time.strftime("%P")
-	return(str(hours) + ":"  + str(minutes) + ampm)
+	current_time = datetime.datetime.now(timezone('UTC')
+	#hours = current_time.strftime("%l")
+	#minutes = current_time.minute
+	time = current_time.strftime("%H:%M:%S")
+	#return(str(hours) + ":"  + str(minutes) + ampm)
+	return(time)
 
 #list of clients sockets
 clients = []
@@ -121,7 +123,7 @@ while True:
 							send_message(connect_socket, "\r<Server> " + usernames[socket] + " has entered the chat!\n")
 						else:
 							#broadcast message
-							send_message(socket, "\r" +"<" + usernames[socket] + " - " + current_time() + " > " + message)
+							send_message(socket, "\r" +"<" + usernames[socket] + " > [" + current_time() + "] " + message)
 				#END RECEIVE MESSAGE FROM CLIENT
 			except:
 				#if it cant rcv on socket, client must have disconnected
