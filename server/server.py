@@ -12,11 +12,19 @@ def send_message(sock, message):
 				if socket in keys:
 					cipher = AES.new(keys[socket])
 					message1 = encrypt_aes(cipher,message)
-				socket.send(message1)
+				if socket in usernames:
+					socket.send(message1)
 			except: #broken connection
 				socket.close()
-				del keys[socket]
-				clients.remove(socket)
+        			if socket in keys:
+					del keys[socket]
+				print(str(socket) + " disconnected")
+				#print clients
+				if socket in clients:
+					clients.remove(socket)
+				time.sleep(1)
+				send_message("<Server> " + str(users[socket]) + " has disconnected.")
+				continue
 
 def send_single_message(socket, message):
 	print("SENDING SINGLE MESSAGE")
@@ -28,8 +36,7 @@ def send_single_message(socket, message):
 	except:
 		socket.close()
 		del keys[socket]
-		clients.remove(socket)
-
+		#print clients
 #decrypt RSA
 def decrypt_rsa(key):
 	private_key = RSA.importKey(open("priv.pem","r"))
@@ -47,10 +54,7 @@ def decrypt_aes(cipher, encrypted):
 #Get current time
 def current_time():
 	current_time = datetime.datetime.now(timezone('UTC'))
-	#hours = current_time.strftime("%l")
-	#minutes = current_time.minute
 	time = current_time.strftime("%H:%M:%S")
-	#return(str(hours) + ":"  + str(minutes) + ampm)
 	return(time)
 
 #list of clients sockets
@@ -71,11 +75,17 @@ connect_socket.listen(10)
 clients.append(connect_socket)
 
 print "Chat server started on port " + str(port)
-
+loops = 0
 while True:
-
-	read, write, error = select.select(clients,[],[])
-
+	try:
+		read, write, error = select.select(clients,[],[])
+	except:
+		if len(clients) > 0:
+			clients.pop()
+		continue
+#	loops = loops + 1
+#	if (loops % 20) == 0:
+#		send_message(connect_socket,"ping")
 	for socket in read:		
 		#START HANDLE NEW CONNECTION
 		if socket == connect_socket:
@@ -116,6 +126,9 @@ while True:
 							if login_success == "true" :
 								usernames[socket] = username
 							else:
+								socket.send("wrng")
+								clients.remove(socket)
+								socket.shutdown()
 								socket.close()
 							#END OF AUTH
 							while len(keys[socket]) < 32:
@@ -123,19 +136,14 @@ while True:
 							send_message(connect_socket, "\r<Server> " + usernames[socket] + " has entered the chat!\n")
 						else:
 							#broadcast message
-							send_message(socket, "\r" +"<" + usernames[socket] + "> [" + current_time() + "] " + message)
+							send_message(connect_socket, "\r" +"<" + usernames[socket] + "> [" + current_time() + "] " + message)
 				#END RECEIVE MESSAGE FROM CLIENT
 			except:
 				#if it cant rcv on socket, client must have disconnected
 				try:
-					send_message(socket, "%s has disconnected" % usernames[socket])
+					send_message(socket, "\r<Server> %s has disconnected\n" % usernames[socket])
 					print "%s has disconnected" % usernames[socket]
-					socket.close()
-					clients.remove(socket)
-					del keys[socket]
-					continue
 				except:
-					socket.close()
-					clients.remove(socket)#send_message(connect_socket, "Someone has disconnected")
-					continue
+					print "Someone disconnected"
+					
 connect_socket.close()
