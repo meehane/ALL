@@ -227,6 +227,8 @@ os.system("clear")
 message_count = 0
 ping_count = 0
 try:
+	print "Login success!"
+	print "<" + username + ">",
 	while 1:
 		socket_list = [sys.stdin, s]
 		#Get the list of sockets that are readable
@@ -250,29 +252,30 @@ try:
 						print "Login failed."
 						print '\x1b[37m'
 						sys.exit()
-					#elif data[0:4] == "ping":
-					#	ping_count = ping_count + 1
 					else:
+						
 						data = decrypt_aes(cipher, data)
 						sys.stdout.write(data)
 						prompt()
-						message_count = message_count + 1        
+						message_count = message_count + 1
+					#if message_count == 0:
+					#	print "Login success"        
 			#user entered a message
 			else:
 				message = sys.stdin.readline()
 				if message[0:12] == 'FileTransfer':
                                         ftpmain() 
 					message=""					
-                                else:
-                                        message = message[:-1] + "                              \n"
-                                        #encrypt message
-                                        message = encrypt_aes(cipher, message)
-                                        s.send(message)
-                                        if message_count > 0:
-                                                print('\x1b[1A\x1b[2K'),
-                                        else:
-                                                message_count = message_count + 1
-                                        prompt()
+				else:
+					message = message[:-1] + "                              \n"
+					#encrypt message
+					message = encrypt_aes(cipher, message)
+					s.send(message)
+					if message_count > 0:
+						print('\x1b[1A\x1b[2K'),
+					else:
+						message_count = message_count + 1
+					prompt()
 except KeyboardInterrupt:	
 	print '\x1b[37m'
 	try:
