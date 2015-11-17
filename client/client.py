@@ -1,4 +1,4 @@
-import socket, select, string, sys, time, base64, os, crypt, pickle, paramiko
+import socket, select, string, sys, time, base64, os, crypt, pickle, paramiko, getpass
 
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
@@ -208,7 +208,7 @@ s.send("setnewkey" + str(encrypted_aes[0]))
 try:
 	#START LOGIN
 	username = raw_input("Enter your username: ")
-	password = raw_input("Enter your password: ")
+	password = getpass.getpass(prompt="Enter your password: ")
 except KeyboardInterrupt:
 	print "\x1b[37m"
 	sys.exit()
