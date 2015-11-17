@@ -1,5 +1,5 @@
 import socket, select, string, sys, time, base64, os, crypt, pickle, paramiko, getpass
-
+# I left myself logged in. not a smart move m80
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES
  ######### IMPORT FTP ##########
